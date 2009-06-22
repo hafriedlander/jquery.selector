@@ -1,0 +1,9 @@
+h2. jQuery Equivilence
+
+This is the selector unit tests from jQuery, run using jquery.selector.is.
+
+* selector.js is unchanged from jQuery (currently 1.3.2)
+
+* index.html has the source includes changed, and a div for the results added
+
+* support.js is custom, with just enough stuff to run the selector.js unit tests. See t() for which selectors are currently being skipped
