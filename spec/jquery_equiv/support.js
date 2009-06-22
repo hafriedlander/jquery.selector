@@ -47,8 +47,7 @@ function t(a,b,c) {
 	b = b.replace(/^#form select:first/, '#select1'); // We don't support :first, but want these tests to run
 	
 	if (
-		b.match(/:(input|radio|checkbox|text|header)/) ||
-		b.match(/:(contains|enabled|disabled|checked|selected|visible)/) ||
+		b.match(/:(contains)/) ||
 		b.match(/:(first|last|nth)([^\-]|$)/) ||
 		b.match(/:(even|odd|eq|lt|gt)/) ||
 		b.match(/:(has)/)
