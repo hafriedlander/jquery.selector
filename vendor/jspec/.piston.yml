@@ -1,0 +1,8 @@
+--- 
+repository_url: git://github.com/visionmedia/jspec.git
+repository_class: Piston::Git::Repository
+lock: false
+handler: 
+  branch: master
+  commit: 39752979dcfe239a12b6e581940d5a1d3a4fc7db
+format: 1
