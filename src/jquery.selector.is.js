@@ -82,8 +82,10 @@ Sizzle is good for finding elements for a selector, but not so good for telling 
 
 	/**** STATE TRACKER ****/
 	
-	var State = $.selector.State = function(){ this.reset(); }
-	$.extend(State.prototype, {
+	var State = $.selector.State = Base.extend({
+		init: function(){ 
+			this.reset(); 
+		},
 		reset: function() {
 			this.attrs = {}; this.wsattrs = {};
 		},
@@ -138,7 +140,7 @@ Sizzle is good for finding elements for a selector, but not so good for telling 
 			this.reset();
 			return 'el = el'+lbl+';';
 		}
-	})
+	});
 	
 	/**** PSEUDO-CLASS DETAILS ****/
 	
@@ -185,79 +187,76 @@ Sizzle is good for finding elements for a selector, but not so good for telling 
 	
 	/**** SimpleSelector ****/
 	
-	$.extend( $.selector.SimpleSelector.prototype, {
-		compile: function(el) {
-			var js = [];
-			
-			/* Check against element name */			
-			if (this.tag && this.tag != '*') {
-				js[js.length] = 'if (el.tagName != "'+this.tag.toUpperCase()+'") BAD;';
-			}
-	
-			/* Check against ID */
-			if (this.id) {
-				js[js.length] = el.uses_attr('id');
-				js[js.length] = 'if (_id !== "'+this.id+'") BAD;';
-			}
-			
-			/* Build className checking variable */
-			if (this.classes.length) {
-				js[js.length] = el.uses_wsattr('class');
-				
-				/* Check against class names */
-				$.each(this.classes, function(i, cls){
-					js[js.length] = 'if (__class.indexOf(" '+cls+' ") == -1) BAD;';
-				})
-			}
-			
-			/* Check against attributes */
-			$.each(this.attrs, function(i, attr){
-				js[js.length] = (attr[1] == '~=') ? el.uses_wsattr(attr[0]) : el.uses_attr(attr[0]);
-				var check = attrchecks[ attr[1] || '-' ];
-				check = check.replace( /K/g, attr[0]).replace( /V/g, attr[2] && attr[2].match(STARTS_WITH_QUOTES) ? attr[2].slice(1,-1) : attr[2] );
-				js[js.length] = 'if ('+check+') BAD;';
-			});
-			
-			/* Check against nots */
-			$.each(this.nots, function(i, not){
-				var lbl = ++lbl_id;
-				var func = join([
-					'l'+lbl+':{',
-						not.compile(el).replace(BAD, 'break l'+lbl).replace(GOOD, 'BAD'),
-					'}'
-				]);
-				
-				if (!(not instanceof $.selector.SimpleSelector)) func = join([
-					el.save(lbl),
-					func,
-					el.restore(lbl)
-				])
-					
-				js[js.length] = func;
-			});
-			
-			/* Check against pseudo-classes */
-			$.each(this.pseudo_classes, function(i, pscls){
-				var check = pseudoclschecks[pscls[0]];
-				if (check) {
-					js[js.length] = ( typeof check == 'function' ? check.apply(this, pscls[1]) : check );
-				}
-				else if (check = $.find.selectors.filters[pscls[0]]) {
-					if (funcToString) {
-						js[js.length] = funcToString(check).replace(/elem/g,'el').replace(/return([^;]+);/,'if (!($1)) BAD;');
-					}
-					else {
-						js[js.length] = 'if (!$.find.selectors.filters.'+pscls[0]+'(el)) BAD;'
-					}
-				}
-			});
-			
-			js[js.length] = 'GOOD';
-			
-			/* Pass */
-			return join(js);
+	$.selector.SimpleSelector.addMethod('compile', function(el) {
+		var js = [];
+		
+		/* Check against element name */			
+		if (this.tag && this.tag != '*') {
+			js[js.length] = 'if (el.tagName != "'+this.tag.toUpperCase()+'") BAD;';
+		}
+
+		/* Check against ID */
+		if (this.id) {
+			js[js.length] = el.uses_attr('id');
+			js[js.length] = 'if (_id !== "'+this.id+'") BAD;';
 		}
 		
+		/* Build className checking variable */
+		if (this.classes.length) {
+			js[js.length] = el.uses_wsattr('class');
+			
+			/* Check against class names */
+			$.each(this.classes, function(i, cls){
+				js[js.length] = 'if (__class.indexOf(" '+cls+' ") == -1) BAD;';
+			})
+		}
+		
+		/* Check against attributes */
+		$.each(this.attrs, function(i, attr){
+			js[js.length] = (attr[1] == '~=') ? el.uses_wsattr(attr[0]) : el.uses_attr(attr[0]);
+			var check = attrchecks[ attr[1] || '-' ];
+			check = check.replace( /K/g, attr[0]).replace( /V/g, attr[2] && attr[2].match(STARTS_WITH_QUOTES) ? attr[2].slice(1,-1) : attr[2] );
+			js[js.length] = 'if ('+check+') BAD;';
+		});
+		
+		/* Check against nots */
+		$.each(this.nots, function(i, not){
+			var lbl = ++lbl_id;
+			var func = join([
+				'l'+lbl+':{',
+					not.compile(el).replace(BAD, 'break l'+lbl).replace(GOOD, 'BAD'),
+				'}'
+			]);
+			
+			if (!(not instanceof $.selector.SimpleSelector)) func = join([
+				el.save(lbl),
+				func,
+				el.restore(lbl)
+			])
+				
+			js[js.length] = func;
+		});
+		
+		/* Check against pseudo-classes */
+		$.each(this.pseudo_classes, function(i, pscls){
+			var check = pseudoclschecks[pscls[0]];
+			if (check) {
+				js[js.length] = ( typeof check == 'function' ? check.apply(this, pscls[1]) : check );
+			}
+			else if (check = $.find.selectors.filters[pscls[0]]) {
+				if (funcToString) {
+					js[js.length] = funcToString(check).replace(/elem/g,'el').replace(/return([^;]+);/,'if (!($1)) BAD;');
+				}
+				else {
+					js[js.length] = 'if (!$.find.selectors.filters.'+pscls[0]+'(el)) BAD;'
+				}
+			}
+		});
+		
+		js[js.length] = 'GOOD';
+		
+		/* Pass */
+		return join(js);
 	});
 	
 	var lbl_id = 0;
@@ -314,46 +313,41 @@ Sizzle is good for finding elements for a selector, but not so good for telling 
 		}
 	};
 	
-	$.extend( $.selector.Selector.prototype, {
-		compile: function(el) {
-			l = this.parts.length;
-			
-			expr = this.parts[--l].compile(el);
-			while (l) {
-				combinator = this.parts[--l];
-				expr = combines[combinator](el, this.parts[--l], as_subexpr(expr));
-			}
-			
-			return expr;
+	$.selector.Selector.addMethod('compile', function(el) {
+		l = this.parts.length;
+		
+		expr = this.parts[--l].compile(el);
+		while (l) {
+			combinator = this.parts[--l];
+			expr = combines[combinator](el, this.parts[--l], as_subexpr(expr));
 		}
+		
+		return expr;
 	});
 
-	$.extend( $.selector.SelectorSequence.prototype, {
-		compile: function(el) {
-			var expr = [], lbl = ++lbl_id;
-			
-			for (var i=0; i < this.parts.length; i++) {
-				expr[expr.length] = join([
-					i == 0 ? el.save(lbl) : el.restore(lbl), 
-					'l'+lbl+'_'+i+':{',
-						this.parts[i].compile(el).replace(BAD, 'break l'+lbl+'_'+i),
-					'}'
-				]);
-			}
-			
-			expr[expr.length] = 'BAD;';
-			return join(expr);
+	$.selector.SelectorsGroup.addMethod('compile', function(el) {
+		var expr = [], lbl = ++lbl_id;
+		
+		for (var i=0; i < this.parts.length; i++) {
+			expr[expr.length] = join([
+				i == 0 ? el.save(lbl) : el.restore(lbl), 
+				'l'+lbl+'_'+i+':{',
+					this.parts[i].compile(el).replace(BAD, 'break l'+lbl+'_'+i),
+				'}'
+			]);
 		}
+		
+		expr[expr.length] = 'BAD;';
+		return join(expr);
 	});
-	
-	$.selector.SelectorSequence.prototype.is = $.selector.Selector.prototype.is = $.selector.SimpleSelector.prototype.is = function(el) {
-		this.is = new Function('el', join([ 
+
+	$.selector.SelectorBase.addMethod('matches', function(el){	
+		this.matches = new Function('el', join([ 
 			'if (!el) return false;',
 			this.compile(new State()).replace(BAD, 'return false').replace(GOOD, 'return true')
 		]));
-		return this.is(el);
-	}
-
+		return this.matches(el);
+	});
 	
 })(jQuery);
 

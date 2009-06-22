@@ -64,7 +64,7 @@ function t(a,b,c) {
 	
 	$('*').each(function(i,el){
 		var id = $.attr(el, "id");
-		if (sel.is(el)) { res.push(id); els.push($(el).attr('name')); }
+		if (sel.matches(el)) { res.push(id); els.push($(el).attr('name')); }
 	})
 	
 	if (res.length !== c.length) pass = false;

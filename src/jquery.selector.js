@@ -1,25 +1,5 @@
 (function($){
 
-	/**
-	 * Very basic Class utility. No support for inheritance or class methods or anything, but the construction function can be called with or without new
-	 * new Foo(arg) <-same as-> Foo(arg)
-	 */  	
-	var marker = {};
-	var Class = function(def) {
-		var Kls = function() {
-			if (arguments[0] === marker) return;
-			
- 			if (this instanceof Kls) {
-				this.init.apply(this, arguments);
-			}
-			else {
-				var ret = new Kls(marker); ret.init.apply(ret, arguments); return ret;
-			}
-		}
-		$.extend(Kls.prototype, def);
-		return Kls;
-	}
-
 	var tokens = {
 		UNICODE: /\\[0-9a-f]{1,6}(?:\r\n|[ \n\r\t\f])?/,
 		ESCAPE: /(?:UNICODE)|\\[^\n\r\f0-9a-f]/,
@@ -71,7 +51,7 @@
 	/**
 	 * A string that matches itself against regexii, and keeps track of how much of itself has been matched
 	 */
-	var ConsumableString = Class({
+	var ConsumableString = Base.extend({
 		init: function(str) {
 			this.str = str;
 			this.pos = 0;
@@ -99,10 +79,13 @@
 		}
 	})
 	
+	/* A base class that all Selectors inherit off */
+	var SelectorBase = Base.extend({});
+	
 	/**
 	 * A class representing a Simple Selector, as per the CSS3 selector spec
 	 */
-	var SimpleSelector = Class({
+	var SimpleSelector = SelectorBase.extend({
 		init: function() {
 			this.tag = null;
 			this.id = null;
@@ -121,7 +104,7 @@
 			/* Then for each selection type, try and find a match */
 			do {
 				if (m = selector.match(rx.not)) {
-					this.nots[this.nots.length] = SelectorSequence().parse(selector)
+					this.nots[this.nots.length] = SelectorsGroup().parse(selector)
 					if (!(m = selector.match(rx.not_end))) {
 						throw 'Invalid :not term in selector';
 					}
@@ -152,7 +135,7 @@
 	/**
 	 * A class representing a Selector, as per the CSS3 selector spec
 	 */
-	var Selector = Class({ 
+	var Selector = SelectorBase.extend({ 
 		init: function(){
 			this.parts = [];
 		},
@@ -171,7 +154,7 @@
 	/**
 	 * A class representing a sequence of selectors, as per the CSS3 selector spec
 	 */
-	var SelectorSequence = Class({ 
+	var SelectorsGroup = SelectorBase.extend({ 
 		init: function(){
 			this.parts = [];
 		},
@@ -188,22 +171,16 @@
 
 	
 	$.selector = function(s){
-		/* First, pull !important off end if present */
-		if (m = s.match(rx.important)) {
-			var important = true;
-			s = se.slice(0,-m[0].length);
-		}
-			
-		/* Then step through body, finding simpleselector [ combinator simpleselector ]* */
 		var cons = ConsumableString(s);
-		var res = SelectorSequence().parse(cons); 
+		var res = SelectorsGroup().parse(cons); 
 		
 		if (!cons.done()) throw 'Could not parse selector - ' + cons.showpos() ;
-		return res;
+		else return res;
 	}
 	
-	$.selector.SelectorSequence = SelectorSequence;
-	$.selector.Selector = Selector;
+	$.selector.SelectorBase = SelectorBase;
 	$.selector.SimpleSelector = SimpleSelector;
+	$.selector.Selector = Selector;
+	$.selector.SelectorsGroup = SelectorsGroup;
 	
 })(jQuery)
