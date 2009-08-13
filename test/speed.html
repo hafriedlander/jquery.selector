@@ -1,0 +1,127 @@
+<html>
+	<head>
+		<link type="text/css" rel="stylesheet" href="../vendor/jspec/lib/jspec.css" />
+		<script src="../vendor/jquery-1.3.2.js"></script>
+		
+		<script src="../src/jquery.class.js"></script>
+		<script src="../src/jquery.selector.js"></script>
+		<script src="../src/jquery.selector.matches.js"></script>
+
+		<script type='text/javascript'>
+			var console;
+			if (!console || !console.log) document.write('<'+'script src="../vendor/firebug_lite/firebug-lite.js"'+'><'+'/script'+'>');
+		</script>
+
+		<script>
+			
+			times = {
+				jquery: 0,
+				selector: 0
+			};
+			
+			function add(selector, what, mode, time) {
+				$('#out').append('<li>'+selector+' - '+what+'('+mode+') - '+time+'</li>');
+				
+				times[what] += time;
+				var max = Math.max(times.jquery, times.selector);
+				
+				$('#jquery_bar').text('jquery - '+times.jquery).css('width', Math.round(times.jquery / max * 100) + '%');
+				$('#selector_bar').text('selector - '+times.selector).css('width', Math.round(times.selector / max * 100) + '%');
+			}
+			
+			function run() {
+				var selectors = [
+					'#a',
+					'.b',
+					'.b.c',
+					'#d > #a',
+					'#e #a',
+					'#e > #d > #a',
+					'#base #d #a',
+					'#a ~ #c',
+					'#a + #b',
+					'#a:not(#b)',
+					'.b:not(.d)',
+					'#e:not(#f) #a:not(#f)',
+					'#d div:nth-child(even)'
+				];
+				
+				var is = 0, isc = 0, fast = 0, fastc = 0;
+				var x = 0, y = 0;
+				function test() {
+					var selector = selectors[x];
+					
+					if (y == 0) {
+						var el = $(selector);
+						var start = (new Date).getTime()
+						for (var j = 0; j < 10000; j++) {
+							if (!el.is(selector)) { $('#out').append('<li>'+selector+':good is:ERROR</li>'); return; }
+						}
+						var time = (new Date).getTime() - start;
+						add(selector, 'jquery', 'good', time)
+						y=1;
+					}
+
+					else if (y == 1) {
+						var el = $(selector)[0]; var s = $.selector(selector);
+						var start = (new Date).getTime()
+						for (var j = 0; j < 10000; j++) {
+							if (!s.matches(el)) { $('#out').append('<li>'+selector+':good fastis:ERROR</li>'); return; };
+						}
+						var time = (new Date).getTime() - start;
+						add(selector, 'selector', 'good', time)
+						y=2;
+					}
+					
+					else if (y==2) {			
+						var el = $('#base');
+						var start = (new Date).getTime()
+						for (var j = 0; j < 10000; j++) {
+							if (el.is(selector)) { $('#out').append('<li>'+selector+':bad is:ERROR</li>'); return; };
+						}
+						var time = (new Date).getTime() - start;
+						add(selector, 'jquery', 'bad', time)
+						y=3;
+					}
+
+					else if (y==3) {			
+						var el = $('#base')[0]; var s = $.selector(selector);
+						var start = (new Date).getTime()
+						for (var j = 0; j < 10000; j++) {
+							if (s.matches(el)) { $('#out').append('<li>'+selector+':bad fastis:ERROR</li>'); return; };
+						}
+						var time = (new Date).getTime() - start;
+						add(selector, 'selector', 'bad', time)
+						y=0; x += 1;
+					}
+										
+					if (x < selectors.length) setTimeout(test,20);
+				}
+				
+				test();
+			}
+		</script>
+		
+		<style type='text/css'>
+			body { padding: 0 20px 0 10px; }
+			.bar { height:30px; float:left; clear:left; margin-bottom: 10px; padding: 5px; }
+			#jquery_bar { background: #46E }
+			#selector_bar { background: #4AA }
+		</style>
+	</head>
+	<body class="jspec" onLoad="run();">
+		<div id='jquery_bar' class='bar'></div>
+		<div id='selector_bar' class='bar'></div>
+		<ul id='out' style='clear:left;'>
+		</ul>
+		<div id='base'>
+			<div id='e'>
+				<div id='d'>
+					<div id='a' class='b c'></div>
+					<div id='b'></div>
+					<div id='c'></div> 
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
