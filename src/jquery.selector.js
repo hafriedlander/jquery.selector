@@ -174,6 +174,8 @@
 		var cons = ConsumableString(s);
 		var res = SelectorsGroup().parse(cons); 
 		
+		res.selector = s;
+		
 		if (!cons.done()) throw 'Could not parse selector - ' + cons.showpos() ;
 		else return res;
 	}
