@@ -18,7 +18,7 @@ h3. Usage
 Usual usage of jQuery selector:
 
 var sel = $.selector('#foo');
-sel.is(element);
+sel.matches(element);
 
 element must be a raw DOM object, not a jQuery element, sequence of elements or anything else
 
@@ -28,7 +28,5 @@ jQuery.selector aims to be 100% compatible with Sizzle (except a couple of corne
 
 One set of extensions Sizzle has is a set of pseudo-classes that filter the currently selected set. These pseudo-classes are ':first', ':last', ':even', ':odd', ':eq', ':nth', ':lt', ':gt'.
 These pseudo-classes are not supported in jQuery.selector, as they don't make sense when the working set is always a single element.
-
-Additionally, the other pseudo-classes Sizzle adds (:contains, :header, :parent and the form selectors) are not currently supported, although they will eventually be
 
 jQuery.selector currently passes the jQuery selector unit test suite, with the exception of the psuedo-classes mentioned above
