@@ -7,7 +7,10 @@
  * 
  * new-less Constructor: new Foo(arg) <-same as-> Foo(arg)
  */  	
-Base = (function(){
+
+var Base;
+
+(function(){
 	
 	var marker = {}, fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;
 
@@ -31,9 +34,16 @@ Base = (function(){
 		}
 		else this.prototype[name] = func;
 	}
+
+	Base.addMethods = function(props) {
+		for (var name in props) {
+			if (typeof props[name] == 'function') this.addMethod(name, props[name]);
+			else this.prototype[name] = props[name];
+		}
+	}
  
 	// Create a new Class that inherits from this class
-	Base.extend = function(prop) {
+	Base.extend = function(props) {
   	
 		// The dummy class constructor
 		var Kls = function() {
@@ -47,21 +57,19 @@ Base = (function(){
 			}
 		}
    
+		// Add the common class variables and methods
 		Kls.constructor = Kls;
 		Kls.extend = Base.extend;
 		Kls.addMethod = Base.addMethod;
+		Kls.addMethods = Base.addMethods;
 		Kls._super = this.prototype;
 	
+		// Attach the parent object to the inheritance chain
 		Kls.prototype = new this(marker);
 	
 		// Copy the properties over onto the new prototype
-		for (var name in prop) {
-			if (typeof prop[name] == 'function') Kls.addMethod(name, prop[name]);
-			else Kls.prototype[name] = prop;
-		}
+		Kls.addMethods(props);
 		
 		return Kls;
 	}; 
-
-	return Base;
 })();
