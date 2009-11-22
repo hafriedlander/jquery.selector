@@ -1,0 +1,42 @@
+<html>
+	<head>
+		<link type="text/css" rel="stylesheet" href="../vendor/jspec/lib/jspec.css" />
+		<script src="../vendor/jquery-1.3.2.js"></script>
+		
+		<script src="../src/jquery.class.js"></script>
+		<script src="../src/jquery.selector.js"></script>
+		<script src="../src/jquery.selector.matches.js"></script>
+
+		<script type='text/javascript'>
+			var console;
+			if (!console || !console.log) document.write('<'+'script src="../vendor/firebug_lite/firebug-lite.js"'+'><'+'/script'+'>');
+		</script>
+
+		<script>
+			/*
+			 * Just some random tests for things that have been raised as bugs, but that aren't tested for in the jQuery Sizzle test suite.
+			 * @todo: Make this use jspec
+			*/
+			function check(f) {
+				if (!f()) console.log("Failure: " + f);
+			}
+			
+			$(function(){
+				check(function(){
+					return !$.selector('[data-type=foo]').matches($('.a')[0]);
+				});
+				check(function(){
+					return !$.selector('[data-type=foo]').matches($('.a')[1]);
+				});
+				check(function(){
+					return !$.selector('[data-type=foo]').matches($('.a')[2]);
+				});
+			})
+		</script>
+	</head>
+	<body class="jspec">
+		<div class='a' data-type='foo'></div>
+		<div class='a' data-type='bar'></div>
+		<div class='a'></div>
+	</body>
+</html>
