@@ -12,7 +12,7 @@ var Base;
 
 (function(){
 	
-	var marker = {}, fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;
+	var marker = {}, fnTest = /xyz/.test(function(){var xyz;}) ? /\b_super\b/ : /.*/;
 
 	// The base Class implementation (does nothing)
 	Base = function(){};
@@ -20,7 +20,7 @@ var Base;
 	Base.addMethod = function(name, func) {
 		var parent = this._super && this._super.prototype;
 		
-		if (parent && fnTest.test(func))	 {
+		if (parent && fnTest.test(func)) {
 			this.prototype[name] = function(){
 				var tmp = this._super;
 				this._super = parent[name];
@@ -31,17 +31,17 @@ var Base;
 					this._super = tmp;
 				}
 				return ret;
-			}
+			};
 		}
 		else this.prototype[name] = func;
-	}
+	};
 
 	Base.addMethods = function(props) {
 		for (var name in props) {
 			if (typeof props[name] == 'function') this.addMethod(name, props[name]);
 			else this.prototype[name] = props[name];
 		}
-	}
+	};
 
 	Base.subclassOf = function(parentkls) {
 		var kls = this;
@@ -49,7 +49,7 @@ var Base;
 			if (kls === parentkls) return true;
 			kls = kls._super;
 		}
-	}
+	};
  
 	// Create a new Class that inherits from this class
 	Base.extend = function(props) {
@@ -64,7 +64,7 @@ var Base;
 			else {
 				var ret = new Kls(marker); if (ret.init) ret.init.apply(ret, arguments); return ret;
 			}
-		}
+		};
    
 		// Add the common class variables and methods
 		Kls.constructor = Kls;
